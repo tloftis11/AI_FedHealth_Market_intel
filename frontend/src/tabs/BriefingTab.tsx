@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FilterPanel } from '../components/FilterPanel'
+import { CheckIcon } from '../components/Icons'
 import { Filters, DEFAULT_FILTERS } from '../types'
 
 interface ProgressEvent {
@@ -94,11 +95,9 @@ td{padding:.45rem .7rem;border-bottom:1px solid #f5f5f7;vertical-align:top}
 
         {/* Timing note */}
         <div style={{
-          display: 'flex', alignItems: 'flex-start', gap: '8px',
-          background: '#fff9e6', borderRadius: '10px', padding: '10px 12px',
-          border: '1px solid rgba(255,180,0,0.2)',
+          borderLeft: '3px solid #f0b429', background: '#fff9e6',
+          borderRadius: '0 8px 8px 0', padding: '10px 12px',
         }}>
-          <span style={{ fontSize: '0.8rem', marginTop: '1px' }}>⏱</span>
           <p style={{ margin: 0, fontSize: '0.75rem', color: '#8a6800', lineHeight: 1.5 }}>
             Typically takes <strong>2–5 minutes</strong> — Claude collects from multiple federal APIs in parallel, then synthesizes.
           </p>
@@ -121,10 +120,9 @@ td{padding:.45rem .7rem;border-bottom:1px solid #f5f5f7;vertical-align:top}
       {/* Main content */}
       <div style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}>
         {!briefingHtml && !running && !error && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60%', gap: '8px', color: '#aeaeb2' }}>
-            <div style={{ fontSize: '2.5rem' }}>📄</div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 500, color: '#6e6e73' }}>Ready to generate</div>
-            <div style={{ fontSize: '0.8rem' }}>Configure filters and click Generate Briefing</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '60%', gap: '6px' }}>
+            <div style={{ fontSize: '0.95rem', fontWeight: 500, color: '#6e6e73' }}>Ready to generate</div>
+            <div style={{ fontSize: '0.8rem', color: '#aeaeb2' }}>Configure filters on the left and click Generate Briefing</div>
           </div>
         )}
 
@@ -147,7 +145,7 @@ td{padding:.45rem .7rem;border-bottom:1px solid #f5f5f7;vertical-align:top}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {progress.map((msg, i) => (
                 <div key={i} className="fade-in-up" style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.82rem', color: '#6e6e73' }}>
-                  <span style={{ color: '#86BC25', flexShrink: 0, marginTop: '1px' }}>✓</span>
+                  <span style={{ flexShrink: 0, marginTop: '2px' }}><CheckIcon /></span>
                   {msg}
                 </div>
               ))}

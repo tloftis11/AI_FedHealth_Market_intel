@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { BriefingTab } from './tabs/BriefingTab'
 import { ChatTab } from './tabs/ChatTab'
+import { LogoMark } from './components/Icons'
 
 type Tab = 'briefing' | 'chat'
 
@@ -22,10 +23,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2.5">
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-              <rect width="28" height="28" rx="8" fill="#1d1d1f"/>
-              <path d="M8 14h4l2-5 3 10 2-7 2 2h3" stroke="#86BC25" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <LogoMark />
             <div>
               <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1d1d1f', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
                 Federal Health

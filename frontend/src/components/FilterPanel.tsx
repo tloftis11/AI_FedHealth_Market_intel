@@ -85,7 +85,7 @@ function SourceToggle({ selected, onClick, disabled, children }: {
         gap: '4px',
       }}
     >
-      {selected && <span style={{ fontSize: '0.6rem', color: '#86BC25' }}>●</span>}
+      {selected && <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#86BC25', display: 'inline-block', flexShrink: 0 }} />}
       {children}
     </button>
   )

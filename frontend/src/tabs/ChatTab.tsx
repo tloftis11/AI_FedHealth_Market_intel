@@ -1,14 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { FilterPanel } from '../components/FilterPanel'
+import { FilterIcon, SendIcon, CloseIcon, CheckIcon } from '../components/Icons'
 import { Filters, DEFAULT_FILTERS, ChatMessage, SessionInfo } from '../types'
 
 const EXAMPLE_QUESTIONS = [
-  { icon: '📡', text: 'What are the top market signals I should be tracking right now?' },
-  { icon: '🏛️', text: 'Summarize the most significant federal contracts awarded this period.' },
-  { icon: '🏢', text: 'Which private sector companies are most actively moving into this space?' },
-  { icon: '📋', text: 'What policy or regulatory changes should I be aware of?' },
-  { icon: '📄', text: 'Generate a leadership-ready briefing based on the current data.' },
-  { icon: '🔭', text: "What's the 6-month outlook and where are the biggest opportunities?" },
+  'What are the top market signals I should be tracking right now?',
+  'Summarize the most significant federal contracts awarded this period.',
+  'Which private sector companies are most actively moving into this space?',
+  'What policy or regulatory changes should I be aware of?',
+  'Generate a leadership-ready briefing based on the current data.',
+  "What's the 6-month outlook and where are the biggest opportunities?",
 ]
 
 async function* streamSSE(url: string, body: unknown) {
@@ -139,7 +140,7 @@ export function ChatTab() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1d1d1f' }}>Filters</div>
-              <button onClick={() => setSidebarOpen(false)} style={{ background: '#f0f0f2', border: 'none', borderRadius: '50%', width: '26px', height: '26px', cursor: 'pointer', fontSize: '0.8rem', color: '#6e6e73' }}>✕</button>
+              <button onClick={() => setSidebarOpen(false)} style={{ background: '#f0f0f2', border: 'none', borderRadius: '50%', width: '26px', height: '26px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CloseIcon color="#6e6e73" /></button>
             </div>
             <FilterPanel filters={filters} onChange={setFilters} disabled={loading} />
             <button
@@ -167,7 +168,7 @@ export function ChatTab() {
               onClick={() => setSidebarOpen(true)}
               style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 10px', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.08)', background: 'white', cursor: 'pointer', fontSize: '0.75rem', color: '#6e6e73', fontWeight: 500 }}
             >
-              <span>⚙</span> Filters
+              <FilterIcon color="#6e6e73" /> Filters
             </button>
             {session && (
               <div style={{ fontSize: '0.72rem', color: '#aeaeb2' }}>
@@ -197,12 +198,12 @@ export function ChatTab() {
             <div className="fade-in-up" style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '12px 0' }}>
               {loadingProgress.length === 0 ? (
                 <div style={{ color: '#aeaeb2', fontSize: '0.82rem', textAlign: 'center', paddingTop: '40px' }}>
-                  <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>🔍</div>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '2.5px solid #00A3AD', borderTopColor: 'transparent', animation: 'spin 0.9s linear infinite', margin: '0 auto 12px' }} />
                   Collecting from federal data sources…
                 </div>
               ) : loadingProgress.map((msg, i) => (
                 <div key={i} className="fade-in-up" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.78rem', color: '#6e6e73' }}>
-                  <span style={{ color: '#86BC25', fontSize: '0.65rem' }}>✓</span>{msg}
+                  <span style={{ flexShrink: 0 }}><CheckIcon /></span>{msg}
                 </div>
               ))}
             </div>
@@ -214,24 +215,24 @@ export function ChatTab() {
               <div style={{ textAlign: 'center', padding: '20px 0 16px', color: '#aeaeb2', fontSize: '0.78rem', fontWeight: 500, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 Suggested questions
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {EXAMPLE_QUESTIONS.map((q, i) => (
                   <button
                     key={i}
-                    onClick={() => sendMessage(q.text)}
+                    onClick={() => sendMessage(q)}
                     disabled={streaming}
                     style={{
-                      textAlign: 'left', padding: '12px 14px', borderRadius: '12px',
+                      textAlign: 'left', padding: '11px 14px', borderRadius: '10px',
                       border: '1px solid rgba(0,0,0,0.07)', background: '#fafafa',
-                      cursor: 'pointer', fontSize: '0.78rem', color: '#1d1d1f',
+                      cursor: 'pointer', fontSize: '0.82rem', color: '#3d3d3f',
                       lineHeight: 1.45, transition: 'all 0.15s ease',
-                      display: 'flex', flexDirection: 'column', gap: '4px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
                     }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#f0f7e6'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(134,188,37,0.3)' }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fafafa'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,0,0,0.07)' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#f0f7e6'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(134,188,37,0.3)'; const arrow = e.currentTarget.querySelector('.q-arrow') as HTMLElement; if (arrow) arrow.style.opacity = '1' }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#fafafa'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(0,0,0,0.07)'; const arrow = e.currentTarget.querySelector('.q-arrow') as HTMLElement; if (arrow) arrow.style.opacity = '0' }}
                   >
-                    <span style={{ fontSize: '1rem' }}>{q.icon}</span>
-                    <span style={{ color: '#3d3d3f' }}>{q.text}</span>
+                    <span>{q}</span>
+                    <span className="q-arrow" style={{ color: '#86BC25', opacity: 0, transition: 'opacity 0.15s', flexShrink: 0 }}>→</span>
                   </button>
                 ))}
               </div>
@@ -241,7 +242,6 @@ export function ChatTab() {
           {/* No context yet (error or not loaded) */}
           {!loading && !session && !error && (
             <div style={{ textAlign: 'center', paddingTop: '60px', color: '#aeaeb2', fontSize: '0.83rem' }}>
-              <div style={{ fontSize: '2rem', marginBottom: '8px' }}>💬</div>
               Starting up — loading market context…
             </div>
           )}
@@ -315,7 +315,7 @@ export function ChatTab() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
-                ↑
+                <SendIcon color="white" />
               </button>
             </div>
             <div style={{ fontSize: '0.68rem', color: '#aeaeb2', marginTop: '6px', paddingLeft: '2px' }}>
