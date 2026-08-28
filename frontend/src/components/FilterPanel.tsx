@@ -7,7 +7,7 @@ interface Props {
 }
 
 const TOPICS = [
-  { key: 'human_plus', label: 'Human+ (AI Workforce)' },
+  { key: 'human_plus', label: 'Human+ · AI Workforce' },
   { key: 'clinical_trials_ai', label: 'AI Clinical Trials' },
 ]
 
@@ -25,73 +25,67 @@ const SOURCES = [
   { key: 'usa_spending', label: 'USASpending' },
   { key: 'fed_register', label: 'Fed Register' },
   { key: 'nih', label: 'NIH Reporter' },
-  { key: 'news', label: 'Google News' },
+  { key: 'news', label: 'News' },
   { key: 'clinical_trials', label: 'ClinicalTrials' },
 ]
 
-function Chip({
-  selected, onClick, disabled, children, color = 'green',
-}: {
-  selected: boolean
-  onClick: () => void
-  disabled?: boolean
-  children: React.ReactNode
-  color?: 'green' | 'teal' | 'gray'
+function Label({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#aeaeb2', marginBottom: '8px' }}>
+      {children}
+    </div>
+  )
+}
+
+function Toggle({ selected, onClick, disabled, children }: {
+  selected: boolean; onClick: () => void; disabled?: boolean; children: React.ReactNode
 }) {
-  const colors = {
-    green: selected
-      ? 'bg-[#86BC25] text-white border-[#86BC25] shadow-sm ring-2 ring-[#86BC25]/30'
-      : 'bg-white text-gray-400 border-gray-200 hover:border-gray-400 hover:text-gray-600',
-    teal: selected
-      ? 'bg-[#00A3AD] text-white border-[#00A3AD] shadow-sm ring-2 ring-[#00A3AD]/30'
-      : 'bg-white text-gray-400 border-gray-200 hover:border-gray-400 hover:text-gray-600',
-    gray: selected
-      ? 'bg-gray-700 text-white border-gray-700 shadow-sm ring-2 ring-gray-400/30'
-      : 'bg-white text-gray-400 border-gray-200 hover:border-gray-400 hover:text-gray-600',
-  }
   return (
     <button
       disabled={disabled}
       onClick={onClick}
-      className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all flex items-center gap-1.5 ${colors[color]} disabled:opacity-40 disabled:cursor-not-allowed`}
+      style={{
+        padding: '6px 14px',
+        borderRadius: 999,
+        fontSize: '0.8rem',
+        fontWeight: selected ? 600 : 400,
+        border: 'none',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        transition: 'all 0.15s ease',
+        background: selected ? '#1d1d1f' : '#f0f0f2',
+        color: selected ? '#ffffff' : '#6e6e73',
+        opacity: disabled ? 0.45 : 1,
+      }}
     >
-      {selected && <span className="text-xs leading-none">✓</span>}
       {children}
     </button>
   )
 }
 
-function SquareChip({
-  selected, onClick, disabled, children, color = 'gray',
-}: {
-  selected: boolean
-  onClick: () => void
-  disabled?: boolean
-  children: React.ReactNode
-  color?: 'green' | 'teal' | 'gray'
+function SourceToggle({ selected, onClick, disabled, children }: {
+  selected: boolean; onClick: () => void; disabled?: boolean; children: React.ReactNode
 }) {
-  const colors = {
-    green: selected
-      ? 'bg-[#86BC25] text-white border-[#86BC25]'
-      : 'bg-white text-gray-400 border-gray-200 hover:text-gray-600 hover:border-gray-400',
-    teal: selected
-      ? 'bg-[#00A3AD] text-white border-[#00A3AD]'
-      : 'bg-white text-gray-400 border-gray-200 hover:text-gray-600 hover:border-gray-400',
-    gray: selected
-      ? 'bg-gray-700 text-white border-gray-700'
-      : 'bg-white text-gray-400 border-gray-200 hover:text-gray-600 hover:border-gray-400',
-  }
   return (
     <button
       disabled={disabled}
       onClick={onClick}
-      className={`px-2.5 py-1 rounded text-xs font-medium border transition-all flex items-center gap-1 ${colors[color]} disabled:opacity-40 disabled:cursor-not-allowed`}
+      style={{
+        padding: '4px 10px',
+        borderRadius: 6,
+        fontSize: '0.72rem',
+        fontWeight: selected ? 500 : 400,
+        border: selected ? 'none' : '1px solid #e8e8ed',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        transition: 'all 0.15s ease',
+        background: selected ? '#e8f5d0' : '#ffffff',
+        color: selected ? '#4a7a0d' : '#aeaeb2',
+        opacity: disabled ? 0.45 : 1,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px',
+      }}
     >
-      <span className={`w-3 h-3 rounded-sm border flex items-center justify-center text-[9px] shrink-0 ${
-        selected ? 'bg-white/30 border-white/50' : 'border-gray-300'
-      }`}>
-        {selected && '✓'}
-      </span>
+      {selected && <span style={{ fontSize: '0.6rem', color: '#86BC25' }}>●</span>}
       {children}
     </button>
   )
@@ -99,137 +93,123 @@ function SquareChip({
 
 export function FilterPanel({ filters, onChange, disabled }: Props) {
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch })
-
   const toggleList = <T extends string>(list: T[], item: T): T[] =>
     list.includes(item) ? list.filter(x => x !== item) : [...list, item]
-
   const useCustomRange = filters.lookback_days === 0
 
   return (
-    <div className="space-y-5">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Topics */}
       <div>
-        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
-          Topic Focus
-        </label>
-        <div className="flex flex-wrap gap-2">
+        <Label>Topic Focus</Label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
           {TOPICS.map(t => (
-            <Chip
+            <Toggle
               key={t.key}
               selected={filters.topics.includes(t.key)}
               onClick={() => set({ topics: toggleList(filters.topics, t.key) })}
               disabled={disabled}
-              color="green"
             >
               {t.label}
-            </Chip>
+            </Toggle>
           ))}
         </div>
         {filters.topics.length === 0 && (
-          <p className="text-xs text-red-400 mt-1">Select at least one topic</p>
+          <div style={{ fontSize: '0.72rem', color: '#ff3b30', marginTop: '5px' }}>
+            Select at least one topic
+          </div>
         )}
       </div>
 
       {/* Time period */}
       <div>
-        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
-          Time Period
-        </label>
-        <div className="flex flex-wrap gap-1.5">
+        <Label>Lookback Period</Label>
+        <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
           {LOOKBACK_OPTIONS.map(opt => (
-            <button
+            <Toggle
               key={opt.value}
-              disabled={disabled}
+              selected={filters.lookback_days === opt.value}
               onClick={() => set({ lookback_days: opt.value, start_date: undefined, end_date: undefined })}
-              className={`px-3 py-1.5 rounded text-sm font-medium border transition-all ${
-                filters.lookback_days === opt.value
-                  ? 'bg-gray-800 text-white border-gray-800 shadow-sm ring-2 ring-gray-400/30'
-                  : 'bg-white text-gray-400 border-gray-200 hover:border-gray-400 hover:text-gray-700'
-              } disabled:opacity-40 disabled:cursor-not-allowed`}
+              disabled={disabled}
             >
               {opt.label}
-            </button>
+            </Toggle>
           ))}
         </div>
         {useCustomRange && (
-          <div className="flex gap-3 mt-2">
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Start date</label>
-              <input
-                type="date"
-                disabled={disabled}
-                value={filters.start_date || ''}
-                onChange={e => set({ start_date: e.target.value })}
-                className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-gray-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">End date</label>
-              <input
-                type="date"
-                disabled={disabled}
-                value={filters.end_date || ''}
-                onChange={e => set({ end_date: e.target.value })}
-                className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-gray-500"
-              />
-            </div>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+            {[
+              { label: 'From', key: 'start_date' as const },
+              { label: 'To', key: 'end_date' as const },
+            ].map(({ label, key }) => (
+              <div key={key}>
+                <div style={{ fontSize: '0.68rem', color: '#aeaeb2', marginBottom: '4px' }}>{label}</div>
+                <input
+                  type="date"
+                  disabled={disabled}
+                  value={filters[key] || ''}
+                  onChange={e => set({ [key]: e.target.value })}
+                  style={{
+                    border: '1px solid #e8e8ed', borderRadius: '8px',
+                    padding: '5px 8px', fontSize: '0.78rem', color: '#1d1d1f',
+                    background: disabled ? '#f5f5f7' : 'white', outline: 'none',
+                  }}
+                />
+              </div>
+            ))}
           </div>
         )}
       </div>
 
       {/* Agencies */}
       <div>
-        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
-          Agencies
-        </label>
-        <div className="flex gap-2">
+        <Label>Agencies</Label>
+        <div style={{ display: 'flex', gap: '6px' }}>
           {AGENCIES.map(a => (
-            <Chip
+            <Toggle
               key={a}
               selected={filters.agencies.includes(a)}
               onClick={() => set({ agencies: toggleList(filters.agencies, a) })}
               disabled={disabled}
-              color="teal"
             >
               {a}
-            </Chip>
+            </Toggle>
           ))}
         </div>
       </div>
 
       {/* Data sources */}
       <div>
-        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
-          Data Sources
-        </label>
-        <div className="flex flex-wrap gap-1.5">
+        <Label>Data Sources</Label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
           {SOURCES.map(s => (
-            <SquareChip
+            <SourceToggle
               key={s.key}
               selected={filters.sources.includes(s.key)}
               onClick={() => set({ sources: toggleList(filters.sources, s.key) })}
               disabled={disabled}
-              color="gray"
             >
               {s.label}
-            </SquareChip>
+            </SourceToggle>
           ))}
         </div>
       </div>
 
       {/* Additional context */}
       <div>
-        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
-          Additional Context
-        </label>
-        <p className="text-xs text-gray-400 mb-1.5">Paste in articles, client notes, or focus areas</p>
+        <Label>Additional Context</Label>
         <textarea
           disabled={disabled}
           value={filters.user_context}
           onChange={e => set({ user_context: e.target.value })}
-          placeholder="Optional — Claude will incorporate this into the analysis..."
+          placeholder="Paste articles, notes, or focus areas for Claude to consider..."
           rows={3}
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-y focus:outline-none focus:border-gray-400 disabled:opacity-40 disabled:cursor-not-allowed bg-gray-50 placeholder:text-gray-300"
+          style={{
+            width: '100%', border: 'none', borderRadius: '10px',
+            padding: '10px 12px', fontSize: '0.8rem', resize: 'vertical',
+            outline: 'none', background: '#f5f5f7', color: '#1d1d1f',
+            lineHeight: 1.5, opacity: disabled ? 0.45 : 1,
+          }}
         />
       </div>
     </div>
