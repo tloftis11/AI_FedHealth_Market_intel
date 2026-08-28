@@ -39,7 +39,7 @@ export default function App() {
             ))}
           </nav>
 
-          <div className="text-xs text-gray-400 py-3">Deloitte Federal Health</div>
+          <div className="text-xs text-gray-400 py-3">Federal Health AI</div>
         </div>
       </header>
 

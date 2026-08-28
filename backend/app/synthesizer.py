@@ -36,12 +36,12 @@ def _build_briefing_prompt(topic_label: str, all_data: list[dict], start_date: s
 
     context_section = f"\nADDITIONAL ANALYST CONTEXT:\n{user_context}\n" if user_context.strip() else ""
 
-    return f"""You are a senior federal health market intelligence analyst at Deloitte Consulting. Synthesize the raw data below into a tight, leadership-ready market brief section.
+    return f"""You are a senior federal health market intelligence analyst. Synthesize the raw data below into a tight, leadership-ready market brief section.
 
 MARKET TOPIC: {topic_label}
 REPORT PERIOD: {start_date} to {end_date}
 FEDERAL AGENCIES COVERED: HHS (NIH, CMS, CDC, FDA, HRSA), Department of Veterans Affairs, Military Health System / DoD
-AUDIENCE: Deloitte federal health practice leadership (managing directors, principals)
+AUDIENCE: Federal health practice leadership (managing directors, principals)
 {context_section}
 ---
 RAW DATA COLLECTED:
@@ -73,7 +73,7 @@ INSTRUCTIONS:
 
 Respond with ONLY a valid JSON object (no markdown fences, no commentary) in this exact structure:
 {{
-  "bluf": "<2-3 sentence bottom line — most important signal and Deloitte implication>",
+  "bluf": "<2-3 sentence bottom line — most important signal and strategic implication>",
   "market_signals": ["<1 sentence>", "<1 sentence>", "<1 sentence>"],
   "policy_updates": ["<1 sentence citing specific rule/notice/guidance>", "<1 sentence>", "<1 sentence>"],
   "federal_actions": [
@@ -85,7 +85,7 @@ Respond with ONLY a valid JSON object (no markdown fences, no commentary) in thi
     {{"company": "<name>", "signal": "<Capital Raise|M&A|Partnership|Growth>", "detail": "<1 sentence with key facts and strategic implication>"}},
     {{"company": "...", "signal": "...", "detail": "..."}}
   ],
-  "trajectory": "<2 sentences — forward look and Deloitte opportunity>"
+  "trajectory": "<2 sentences — forward look and strategic opportunity>"
 }}"""
 
 
@@ -142,7 +142,7 @@ def build_chat_system_prompt(all_data: list[dict], topics: list[str], start_date
 
     context_section = f"\nADDITIONAL CONTEXT PROVIDED BY ANALYST:\n{user_context}\n" if user_context.strip() else ""
 
-    return f"""You are a senior federal health market intelligence analyst at Deloitte Consulting with deep expertise in AI adoption across federal health agencies.
+    return f"""You are a senior federal health market intelligence analyst with deep expertise in AI adoption across federal health agencies.
 
 You have access to freshly collected market data for the following topics: {', '.join(topic_labels)}
 Report period: {start_date} to {end_date}

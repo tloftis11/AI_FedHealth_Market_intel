@@ -97,10 +97,19 @@ td{padding:.4rem .6rem;border-bottom:1px solid #e8e8e8;vertical-align:top}
       <div className="w-80 shrink-0 bg-white rounded-xl shadow-sm border border-gray-200 p-5 overflow-y-auto">
         <h2 className="text-base font-bold text-gray-800 mb-4">Briefing Filters</h2>
         <FilterPanel filters={filters} onChange={setFilters} disabled={running} />
+
+        {/* Timing warning */}
+        <div className="mt-4 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
+          <span className="text-amber-500 text-sm mt-0.5">⏱</span>
+          <p className="text-xs text-amber-700 leading-snug">
+            Generating a briefing typically takes <strong>2–5 minutes</strong> — Claude is collecting from multiple federal APIs and synthesizing the results.
+          </p>
+        </div>
+
         <button
           onClick={generate}
           disabled={running || filters.topics.length === 0}
-          className="mt-5 w-full py-2.5 rounded-lg font-semibold text-white transition-colors
+          className="mt-4 w-full py-2.5 rounded-lg font-semibold text-white transition-colors
             bg-[#86BC25] hover:bg-[#75a820] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {running ? 'Generating...' : 'Generate Briefing'}
@@ -110,21 +119,24 @@ td{padding:.4rem .6rem;border-bottom:1px solid #e8e8e8;vertical-align:top}
       {/* Main area */}
       <div className="flex-1 min-w-0 overflow-y-auto">
         {!briefingHtml && !running && !error && (
-          <div className="flex items-center justify-center h-64 text-gray-400 text-sm">
-            Configure filters and click <strong className="mx-1">Generate Briefing</strong> to begin.
+          <div className="flex flex-col items-center justify-center h-64 text-gray-400 text-sm gap-2">
+            <div className="text-3xl">📄</div>
+            <p>Configure filters and click <strong className="text-gray-500">Generate Briefing</strong> to begin.</p>
+            <p className="text-xs text-gray-300">Allow 2–5 minutes for collection and synthesis.</p>
           </div>
         )}
 
         {running && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-1">
               <div className="animate-spin rounded-full h-5 w-5 border-2 border-[#86BC25] border-t-transparent" />
               <span className="font-semibold text-gray-700">Collecting &amp; synthesizing...</span>
             </div>
-            <ul className="space-y-1">
+            <p className="text-xs text-gray-400 mb-4 ml-8">This takes 2–5 minutes. Please keep this tab open.</p>
+            <ul className="space-y-1.5">
               {progress.map((msg, i) => (
                 <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
-                  <span className="text-[#86BC25] mt-0.5">✓</span>
+                  <span className="text-[#86BC25] mt-0.5 shrink-0">✓</span>
                   {msg}
                 </li>
               ))}
