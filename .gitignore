@@ -12,7 +12,7 @@ dist/
 
 # Node
 node_modules/
-frontend/dist/
+# frontend/dist/ is committed so Render doesn't need Node to deploy
 
 # OS
 .DS_Store
