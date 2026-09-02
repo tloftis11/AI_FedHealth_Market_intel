@@ -44,7 +44,7 @@ export function BriefingTab() {
   const [error, setError] = useState<string | null>(null)
 
   async function generate() {
-    if (filters.topics.length === 0) { setError('Select at least one topic.'); return }
+    if (filters.topics.length === 0 && filters.custom_topics.length === 0) { setError('Select at least one topic.'); return }
     setRunning(true); setProgress([]); setBriefingHtml(null); setError(null)
     try {
       for await (const event of streamSSE('/api/generate', filters)) {
@@ -105,11 +105,11 @@ td{padding:.45rem .7rem;border-bottom:1px solid #f5f5f7;vertical-align:top}
 
         <button
           onClick={generate}
-          disabled={running || filters.topics.length === 0}
+          disabled={running || (filters.topics.length === 0 && filters.custom_topics.length === 0)}
           style={{
             padding: '10px', borderRadius: '10px', fontWeight: 600, fontSize: '0.875rem',
             border: 'none', cursor: running || filters.topics.length === 0 ? 'not-allowed' : 'pointer',
-            background: running || filters.topics.length === 0 ? '#d1d1d6' : '#86BC25',
+            background: running || (filters.topics.length === 0 && filters.custom_topics.length === 0) ? '#d1d1d6' : '#86BC25',
             color: 'white', transition: 'all 0.2s ease', letterSpacing: '-0.01em',
           }}
         >

@@ -40,7 +40,7 @@ def _build_briefing_prompt(topic_label: str, all_data: list[dict], start_date: s
 
 MARKET TOPIC: {topic_label}
 REPORT PERIOD: {start_date} to {end_date}
-FEDERAL AGENCIES COVERED: HHS (NIH, CMS, CDC, FDA, HRSA), Department of Veterans Affairs, Military Health System / DoD
+FEDERAL AGENCIES COVERED: HHS and all operating divisions (NIH, CMS, CDC, FDA, HRSA, SAMHSA, AHRQ, IHS), Department of Veterans Affairs
 AUDIENCE: Federal health practice leadership (managing directors, principals)
 {context_section}
 ---
@@ -130,10 +130,7 @@ def synthesize(topic_label: str, all_data: list[dict], start_date: str, end_date
     return _parse_json(text)
 
 
-def build_chat_system_prompt(all_data: list[dict], topics: list[str], start_date: str, end_date: str, user_context: str = "") -> str:
-    from app.config import TOPICS
-    topic_labels = [TOPICS[t]["label"] for t in topics if t in TOPICS]
-
+def build_chat_system_prompt(all_data: list[dict], topic_labels: list[str], start_date: str, end_date: str, user_context: str = "") -> str:
     contracts = _format_items(all_data, "contract", max_items=20)
     grants = _format_items(all_data, "grant", max_items=20)
     regulations = _format_items(all_data, "regulation", max_items=20)
@@ -141,12 +138,13 @@ def build_chat_system_prompt(all_data: list[dict], topics: list[str], start_date
     trials = _format_items(all_data, "clinical_trial", max_items=15)
 
     context_section = f"\nADDITIONAL CONTEXT PROVIDED BY ANALYST:\n{user_context}\n" if user_context.strip() else ""
+    topics_str = ", ".join(topic_labels) if topic_labels else "Federal health AI"
 
     return f"""You are a senior federal health market intelligence analyst with deep expertise in AI adoption across federal health agencies.
 
-You have access to freshly collected market data for the following topics: {', '.join(topic_labels)}
+You have access to freshly collected market data for the following topics: {topics_str}
 Report period: {start_date} to {end_date}
-Agencies covered: HHS (NIH, CMS, CDC, FDA, HRSA), VA, DoD
+Agencies covered: HHS and all operating divisions (NIH, CMS, CDC, FDA, HRSA, SAMHSA, AHRQ, IHS), VA
 {context_section}
 ---
 COLLECTED MARKET DATA:
@@ -167,7 +165,7 @@ CLINICAL TRIALS:
 {trials}
 ---
 
-Answer questions about this space with specific citations from the data above wherever possible. Be direct and analytical — your audience is Deloitte managing directors and principals.
+Answer questions about this space with specific citations from the data above wherever possible. Be direct and analytical.
 
 If asked to generate or regenerate a briefing, return it as clean markdown with the following sections:
 ## BLUF

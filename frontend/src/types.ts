@@ -1,9 +1,13 @@
+export interface CustomTopic {
+  description: string
+}
+
 export interface Filters {
   topics: string[]
+  custom_topics: CustomTopic[]
   lookback_days: number
   start_date?: string
   end_date?: string
-  agencies: string[]
   sources: string[]
   user_context: string
 }
@@ -23,8 +27,8 @@ export interface SessionInfo {
 
 export const DEFAULT_FILTERS: Filters = {
   topics: ['human_plus', 'clinical_trials_ai'],
+  custom_topics: [],
   lookback_days: 90,
-  agencies: ['HHS', 'VA', 'DoD'],
   sources: ['usa_spending', 'fed_register', 'nih', 'news', 'clinical_trials'],
   user_context: '',
 }

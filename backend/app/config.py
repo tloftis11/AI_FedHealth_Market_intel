@@ -66,7 +66,7 @@ TOPICS = {
     },
 }
 
-# Agency definitions per data source
+# HHS (all operating divisions) + VA — no DoD
 _AGENCY_MAP = {
     "HHS": {
         "usa_spending": {"type": "awarding", "tier": "toptier", "name": "Department of Health and Human Services"},
@@ -77,17 +77,17 @@ _AGENCY_MAP = {
             "food-and-drug-administration",
             "centers-for-disease-control-and-prevention",
             "health-resources-services-administration",
+            "substance-abuse-and-mental-health-services-administration",
+            "agency-for-healthcare-research-and-quality",
+            "administration-for-children-and-families",
+            "administration-for-community-living",
+            "indian-health-service",
         ],
-        "nih_reporter": ["NIH", "CDC", "FDA", "HRSA", "AHRQ"],
+        "nih_reporter": ["NIH", "CDC", "FDA", "HRSA", "AHRQ", "SAMHSA", "IHS"],
     },
     "VA": {
         "usa_spending": {"type": "awarding", "tier": "toptier", "name": "Department of Veterans Affairs"},
         "federal_register": ["veterans-affairs-department"],
-        "nih_reporter": [],
-    },
-    "DoD": {
-        "usa_spending": {"type": "awarding", "tier": "toptier", "name": "Department of Defense"},
-        "federal_register": ["defense-department"],
         "nih_reporter": [],
     },
 }

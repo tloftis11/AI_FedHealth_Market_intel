@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { Filters } from '../types'
+import { CloseIcon } from './Icons'
 
 interface Props {
   filters: Filters
@@ -18,8 +20,6 @@ const LOOKBACK_OPTIONS = [
   { value: 180, label: '180d' },
   { value: 0, label: 'Custom' },
 ]
-
-const AGENCIES = ['HHS', 'VA', 'DoD']
 
 const SOURCES = [
   { key: 'usa_spending', label: 'USASpending' },
@@ -92,14 +92,28 @@ function SourceToggle({ selected, onClick, disabled, children }: {
 }
 
 export function FilterPanel({ filters, onChange, disabled }: Props) {
+  const [draftTopic, setDraftTopic] = useState('')
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch })
   const toggleList = <T extends string>(list: T[], item: T): T[] =>
     list.includes(item) ? list.filter(x => x !== item) : [...list, item]
   const useCustomRange = filters.lookback_days === 0
 
+  const hasNoTopics = filters.topics.length === 0 && filters.custom_topics.length === 0
+
+  function addCustomTopic() {
+    const trimmed = draftTopic.trim()
+    if (!trimmed) return
+    set({ custom_topics: [...filters.custom_topics, { description: trimmed }] })
+    setDraftTopic('')
+  }
+
+  function removeCustomTopic(index: number) {
+    set({ custom_topics: filters.custom_topics.filter((_, i) => i !== index) })
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Topics */}
+      {/* Preset Topics */}
       <div>
         <Label>Topic Focus</Label>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -114,11 +128,85 @@ export function FilterPanel({ filters, onChange, disabled }: Props) {
             </Toggle>
           ))}
         </div>
-        {filters.topics.length === 0 && (
+        {hasNoTopics && (
           <div style={{ fontSize: '0.72rem', color: '#ff3b30', marginTop: '5px' }}>
-            Select at least one topic
+            Select a topic or add a custom one below
           </div>
         )}
+      </div>
+
+      {/* Custom Topics */}
+      <div>
+        <Label>Custom Topics</Label>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <input
+            type="text"
+            disabled={disabled}
+            value={draftTopic}
+            onChange={e => setDraftTopic(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addCustomTopic()}
+            placeholder="e.g. AI-assisted radiology in VA"
+            style={{
+              flex: 1,
+              border: '1px solid #e8e8ed',
+              borderRadius: '8px',
+              padding: '6px 10px',
+              fontSize: '0.78rem',
+              color: '#1d1d1f',
+              background: disabled ? '#f5f5f7' : 'white',
+              outline: 'none',
+              opacity: disabled ? 0.45 : 1,
+            }}
+          />
+          <button
+            disabled={disabled || !draftTopic.trim()}
+            onClick={addCustomTopic}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '8px',
+              fontSize: '0.78rem',
+              fontWeight: 500,
+              border: 'none',
+              cursor: disabled || !draftTopic.trim() ? 'not-allowed' : 'pointer',
+              background: disabled || !draftTopic.trim() ? '#f0f0f2' : '#1d1d1f',
+              color: disabled || !draftTopic.trim() ? '#aeaeb2' : 'white',
+              transition: 'all 0.15s ease',
+              flexShrink: 0,
+            }}
+          >
+            Add
+          </button>
+        </div>
+        {filters.custom_topics.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '8px' }}>
+            {filters.custom_topics.map((ct, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: '4px',
+                padding: '4px 6px 4px 10px',
+                borderRadius: 999,
+                background: '#e8f5d0',
+                border: '1px solid #c5e09a',
+                fontSize: '0.72rem',
+                color: '#4a7a0d',
+                maxWidth: '230px',
+              }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {ct.description.length > 32 ? ct.description.slice(0, 32) + '…' : ct.description}
+                </span>
+                <button
+                  disabled={disabled}
+                  onClick={() => removeCustomTopic(i)}
+                  style={{ background: 'none', border: 'none', cursor: disabled ? 'not-allowed' : 'pointer', padding: '1px', display: 'flex', flexShrink: 0, opacity: disabled ? 0.45 : 1 }}
+                >
+                  <CloseIcon color="#4a7a0d" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div style={{ fontSize: '0.68rem', color: '#aeaeb2', marginTop: '6px', lineHeight: 1.4 }}>
+          Claude generates search terms from your description
+        </div>
       </div>
 
       {/* Time period */}
@@ -159,23 +247,6 @@ export function FilterPanel({ filters, onChange, disabled }: Props) {
             ))}
           </div>
         )}
-      </div>
-
-      {/* Agencies */}
-      <div>
-        <Label>Agencies</Label>
-        <div style={{ display: 'flex', gap: '6px' }}>
-          {AGENCIES.map(a => (
-            <Toggle
-              key={a}
-              selected={filters.agencies.includes(a)}
-              onClick={() => set({ agencies: toggleList(filters.agencies, a) })}
-              disabled={disabled}
-            >
-              {a}
-            </Toggle>
-          ))}
-        </div>
       </div>
 
       {/* Data sources */}
