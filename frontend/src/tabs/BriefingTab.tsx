@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { FilterPanel } from '../components/FilterPanel'
-import { CheckIcon } from '../components/Icons'
+import { CheckIcon, SendIcon } from '../components/Icons'
 import { Filters, DEFAULT_FILTERS } from '../types'
 
 interface ProgressEvent {
   type: 'progress' | 'result' | 'error' | 'done'
   message?: string
   html?: string
+  session_id?: string
 }
 
 async function* streamSSE(url: string, body: unknown): AsyncGenerator<ProgressEvent> {
@@ -39,23 +40,56 @@ async function* streamSSE(url: string, body: unknown): AsyncGenerator<ProgressEv
 export function BriefingTab() {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [running, setRunning] = useState(false)
+  const [refining, setRefining] = useState(false)
   const [progress, setProgress] = useState<string[]>([])
   const [briefingHtml, setBriefingHtml] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [refineInput, setRefineInput] = useState('')
+  const [appliedFeedback, setAppliedFeedback] = useState<string[]>([])
+
+  const noTopics = filters.topics.length === 0 && filters.custom_topics.length === 0
 
   async function generate() {
-    if (filters.topics.length === 0 && filters.custom_topics.length === 0) { setError('Select at least one topic.'); return }
+    if (noTopics) { setError('Select at least one topic.'); return }
     setRunning(true); setProgress([]); setBriefingHtml(null); setError(null)
+    setSessionId(null); setAppliedFeedback([])
     try {
       for await (const event of streamSSE('/api/generate', filters)) {
         if (event.type === 'progress' && event.message) setProgress(p => [...p, event.message!])
-        else if (event.type === 'result' && event.html) setBriefingHtml(event.html)
+        else if (event.type === 'result' && event.html) {
+          setBriefingHtml(event.html)
+          if (event.session_id) setSessionId(event.session_id)
+        }
         else if (event.type === 'error' && event.message) setError(event.message)
       }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Unknown error')
     } finally {
       setRunning(false)
+    }
+  }
+
+  async function refine() {
+    if (!sessionId || !refineInput.trim() || refining) return
+    const feedback = refineInput.trim()
+    setRefineInput('')
+    setRefining(true)
+    setProgress([])
+    setError(null)
+    try {
+      for await (const event of streamSSE('/api/refine', { session_id: sessionId, feedback })) {
+        if (event.type === 'progress' && event.message) setProgress(p => [...p, event.message!])
+        else if (event.type === 'result' && event.html) {
+          setBriefingHtml(event.html)
+          setAppliedFeedback(p => [...p, feedback])
+        }
+        else if (event.type === 'error' && event.message) setError(event.message)
+      }
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Unknown error')
+    } finally {
+      setRefining(false)
     }
   }
 
@@ -91,7 +125,7 @@ td{padding:.45rem .7rem;border-bottom:1px solid #f5f5f7;vertical-align:top}
           Configure Briefing
         </div>
 
-        <FilterPanel filters={filters} onChange={setFilters} disabled={running} />
+        <FilterPanel filters={filters} onChange={setFilters} disabled={running || refining} />
 
         {/* Timing note */}
         <div style={{
@@ -105,11 +139,11 @@ td{padding:.45rem .7rem;border-bottom:1px solid #f5f5f7;vertical-align:top}
 
         <button
           onClick={generate}
-          disabled={running || (filters.topics.length === 0 && filters.custom_topics.length === 0)}
+          disabled={running || refining || noTopics}
           style={{
             padding: '10px', borderRadius: '10px', fontWeight: 600, fontSize: '0.875rem',
-            border: 'none', cursor: running || filters.topics.length === 0 ? 'not-allowed' : 'pointer',
-            background: running || (filters.topics.length === 0 && filters.custom_topics.length === 0) ? '#d1d1d6' : '#86BC25',
+            border: 'none', cursor: running || refining || noTopics ? 'not-allowed' : 'pointer',
+            background: running || refining || noTopics ? '#d1d1d6' : '#86BC25',
             color: 'white', transition: 'all 0.2s ease', letterSpacing: '-0.01em',
           }}
         >
@@ -154,14 +188,15 @@ td{padding:.45rem .7rem;border-bottom:1px solid #f5f5f7;vertical-align:top}
         )}
 
         {error && (
-          <div style={{ background: '#fff2f2', border: '1px solid rgba(255,59,48,0.2)', borderRadius: '12px', padding: '14px 16px', fontSize: '0.83rem', color: '#c0392b' }}>
+          <div style={{ background: '#fff2f2', border: '1px solid rgba(255,59,48,0.2)', borderRadius: '12px', padding: '14px 16px', fontSize: '0.83rem', color: '#c0392b', marginBottom: '12px' }}>
             <strong>Error:</strong> {error}
           </div>
         )}
 
         {briefingHtml && !running && (
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            {/* Header row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
               <div style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: '#aeaeb2' }}>
                 Briefing Preview
               </div>
@@ -169,12 +204,89 @@ td{padding:.45rem .7rem;border-bottom:1px solid #f5f5f7;vertical-align:top}
                 <button onClick={printBriefing} style={{ padding: '6px 14px', borderRadius: 999, fontSize: '0.78rem', fontWeight: 500, border: '1px solid rgba(0,0,0,0.1)', background: 'white', color: '#6e6e73', cursor: 'pointer' }}>
                   Print / PDF
                 </button>
-                <button onClick={generate} style={{ padding: '6px 14px', borderRadius: 999, fontSize: '0.78rem', fontWeight: 500, border: 'none', background: '#86BC25', color: 'white', cursor: 'pointer' }}>
+                <button onClick={generate} disabled={refining} style={{ padding: '6px 14px', borderRadius: 999, fontSize: '0.78rem', fontWeight: 500, border: 'none', background: refining ? '#d1d1d6' : '#86BC25', color: 'white', cursor: refining ? 'not-allowed' : 'pointer' }}>
                   Regenerate
                 </button>
               </div>
             </div>
-            <div style={{ background: 'white', borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden' }}
+
+            {/* Refinement bar */}
+            <div style={{
+              background: 'white', borderRadius: '12px',
+              border: '1px solid rgba(0,0,0,0.07)',
+              padding: '12px 14px', marginBottom: '12px',
+            }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#aeaeb2', marginBottom: '8px' }}>
+                Refine this briefing
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  value={refineInput}
+                  onChange={e => setRefineInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && refine()}
+                  disabled={refining}
+                  placeholder="Provide feedback or additional context to redraft…"
+                  style={{
+                    flex: 1, border: 'none', outline: 'none', borderRadius: '8px',
+                    padding: '7px 10px', fontSize: '0.83rem', color: '#1d1d1f',
+                    background: '#f5f5f7', opacity: refining ? 0.5 : 1,
+                  }}
+                />
+                <button
+                  onClick={refine}
+                  disabled={refining || !refineInput.trim()}
+                  style={{
+                    width: '32px', height: '32px', borderRadius: '8px',
+                    border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: refining || !refineInput.trim() ? '#f0f0f2' : '#1d1d1f',
+                    cursor: refining || !refineInput.trim() ? 'not-allowed' : 'pointer',
+                    flexShrink: 0, transition: 'all 0.15s ease',
+                  }}
+                >
+                  {refining
+                    ? <div style={{ width: '14px', height: '14px', borderRadius: '50%', border: '2px solid #aeaeb2', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />
+                    : <SendIcon color={refineInput.trim() ? '#ffffff' : '#aeaeb2'} />
+                  }
+                </button>
+              </div>
+
+              {/* Refinement progress */}
+              {refining && progress.length > 0 && (
+                <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                  {progress.map((msg, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', fontSize: '0.78rem', color: '#6e6e73' }}>
+                      <span style={{ flexShrink: 0, marginTop: '2px' }}><CheckIcon /></span>
+                      {msg}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Applied feedback tags */}
+              {appliedFeedback.length > 0 && !refining && (
+                <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.68rem', color: '#aeaeb2' }}>Applied:</span>
+                  {appliedFeedback.map((f, i) => (
+                    <span key={i} style={{
+                      fontSize: '0.68rem', color: '#6e6e73', background: '#f0f0f2',
+                      borderRadius: '4px', padding: '2px 7px',
+                    }}>
+                      {f.length > 48 ? f.slice(0, 48) + '…' : f}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Briefing content */}
+            <div
+              style={{
+                background: 'white', borderRadius: '16px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.06)',
+                overflow: 'hidden', opacity: refining ? 0.45 : 1,
+                transition: 'opacity 0.2s ease',
+              }}
               dangerouslySetInnerHTML={{ __html: briefingHtml }}
             />
           </div>

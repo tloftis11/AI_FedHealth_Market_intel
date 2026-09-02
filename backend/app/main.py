@@ -119,6 +119,7 @@ async def generate(req: FilterParams):
     async def stream():
         topic_sections = []
         topics_covered = []
+        briefing_topics = []  # store per-topic data for later refinement
 
         # Preset topics
         for topic_key in valid_topics:
@@ -132,6 +133,7 @@ async def generate(req: FilterParams):
                 )
                 topic_sections.append(format_briefing(topic_key, topic, synthesis, start_date, end_date))
                 topics_covered.append(topic["label"])
+                briefing_topics.append({"key": topic_key, "cfg": topic, "data": all_data})
                 yield _sse({"type": "progress", "message": f"{topic['short']} complete."})
             except Exception as e:
                 yield _sse({"type": "error", "message": f"Synthesis failed for {topic['short']}: {e}"})
@@ -157,13 +159,79 @@ async def generate(req: FilterParams):
                 )
                 topic_sections.append(format_briefing(f"custom_{i}", topic_cfg, synthesis, start_date, end_date))
                 topics_covered.append(topic_cfg["label"])
+                briefing_topics.append({"key": f"custom_{i}", "cfg": topic_cfg, "data": all_data})
                 yield _sse({"type": "progress", "message": f"{topic_cfg['short']} complete."})
             except Exception as e:
                 yield _sse({"type": "error", "message": f"Synthesis failed for {topic_cfg['short']}: {e}"})
                 return
 
+        # Store session so the briefing can be refined without re-collecting
+        session_id = str(uuid.uuid4())
+        _sessions[session_id] = {
+            "briefing_topics": briefing_topics,
+            "start_date": start_date,
+            "end_date": end_date,
+            "user_context": req.user_context,
+            "feedback_history": [],
+        }
+
         html = wrap_briefing(topic_sections, topics_covered, start_date, end_date)
-        yield _sse({"type": "result", "html": html})
+        yield _sse({"type": "result", "html": html, "session_id": session_id})
+        yield _sse({"type": "done"})
+
+    return StreamingResponse(stream(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+class RefineRequest(BaseModel):
+    session_id: str
+    feedback: str
+
+
+@app.post("/api/refine")
+async def refine_briefing(req: RefineRequest):
+    """Re-synthesize a briefing with new feedback — no re-collection needed."""
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not set")
+
+    session = _sessions.get(req.session_id)
+    if not session or "briefing_topics" not in session:
+        raise HTTPException(status_code=404, detail="Session not found — regenerate the briefing first")
+
+    start_date = session["start_date"]
+    end_date = session["end_date"]
+
+    # Build accumulated context: original + all prior feedback + new feedback
+    history = session.get("feedback_history", [])
+    base_context = session.get("user_context", "")
+    accumulated = base_context
+    if history:
+        accumulated += "\n\nPREVIOUS REFINEMENTS APPLIED:\n" + "\n".join(f"- {f}" for f in history)
+    accumulated += f"\n\nREFINEMENT REQUEST:\n{req.feedback}"
+
+    async def stream():
+        topic_sections = []
+        topics_covered = []
+
+        for entry in session["briefing_topics"]:
+            cfg = entry["cfg"]
+            short = cfg.get("short", cfg.get("label", "Topic"))
+            yield _sse({"type": "progress", "message": f"Redrafting {short} with your feedback..."})
+            try:
+                synthesis = await asyncio.to_thread(
+                    synthesize, cfg["label"], entry["data"], start_date, end_date, accumulated
+                )
+                topic_sections.append(format_briefing(entry["key"], cfg, synthesis, start_date, end_date))
+                topics_covered.append(cfg["label"])
+                yield _sse({"type": "progress", "message": f"{short} complete."})
+            except Exception as e:
+                yield _sse({"type": "error", "message": f"Redraft failed for {short}: {e}"})
+                return
+
+        session["feedback_history"] = history + [req.feedback]
+
+        html = wrap_briefing(topic_sections, topics_covered, start_date, end_date)
+        yield _sse({"type": "result", "html": html, "session_id": req.session_id})
         yield _sse({"type": "done"})
 
     return StreamingResponse(stream(), media_type="text/event-stream",
