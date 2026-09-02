@@ -100,10 +100,20 @@ export function FilterPanel({ filters, onChange, disabled }: Props) {
 
   const hasNoTopics = filters.topics.length === 0 && filters.custom_topics.length === 0
 
+  function selectPresetTopic(key: string) {
+    if (filters.topics.includes(key)) {
+      set({ topics: [] })
+    } else {
+      // Single-select: clear other presets and any custom topic
+      set({ topics: [key], custom_topics: [] })
+    }
+  }
+
   function addCustomTopic() {
     const trimmed = draftTopic.trim()
     if (!trimmed) return
-    set({ custom_topics: [...filters.custom_topics, { description: trimmed }] })
+    // Single-select: replace existing custom topic, clear preset topics
+    set({ topics: [], custom_topics: [{ description: trimmed }] })
     setDraftTopic('')
   }
 
@@ -121,7 +131,7 @@ export function FilterPanel({ filters, onChange, disabled }: Props) {
             <Toggle
               key={t.key}
               selected={filters.topics.includes(t.key)}
-              onClick={() => set({ topics: toggleList(filters.topics, t.key) })}
+              onClick={() => selectPresetTopic(t.key)}
               disabled={disabled}
             >
               {t.label}

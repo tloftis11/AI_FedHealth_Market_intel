@@ -26,7 +26,7 @@ export interface SessionInfo {
 }
 
 export const DEFAULT_FILTERS: Filters = {
-  topics: ['human_plus', 'clinical_trials_ai'],
+  topics: ['human_plus'],
   custom_topics: [],
   lookback_days: 90,
   sources: ['usa_spending', 'fed_register', 'nih', 'news', 'clinical_trials'],
