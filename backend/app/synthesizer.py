@@ -6,6 +6,16 @@ import anthropic
 from app.config import CLAUDE_MODEL, SYNTHESIS_MAX_TOKENS
 
 
+def _fmt_amount(val) -> str:
+    """Format a dollar amount that may arrive as int, float, or string."""
+    if val is None:
+        return ""
+    try:
+        return f"${float(val):,.0f}"
+    except (ValueError, TypeError):
+        return str(val)
+
+
 def _format_items(items: list[dict], item_type: str, max_items: int = 15) -> str:
     filtered = [i for i in items if i.get("type") == item_type][:max_items]
     if not filtered:
@@ -13,10 +23,10 @@ def _format_items(items: list[dict], item_type: str, max_items: int = 15) -> str
     lines = []
     for item in filtered:
         if item_type == "contract":
-            amount = f"${item['amount']:,.0f}" if item.get("amount") else "amount unknown"
+            amount = _fmt_amount(item.get("amount")) or "amount unknown"
             lines.append(f"  - {item.get('organization', 'Unknown')} | {amount} | {item.get('agency', '')} | {item.get('date', '')} | {item.get('title', '')[:120]}")
         elif item_type == "grant":
-            amount = f"${item['amount']:,.0f}" if item.get("amount") else "amount unknown"
+            amount = _fmt_amount(item.get("amount")) or "amount unknown"
             lines.append(f"  - {item.get('organization', '')} | {amount} | {item.get('agency', '')} | {item.get('date', '')} | {item.get('title', '')[:120]}")
         elif item_type == "regulation":
             lines.append(f"  - [{item.get('doc_type', '')}] {item.get('agency', '')} | {item.get('date', '')} | {item.get('title', '')[:150]}")
@@ -25,7 +35,7 @@ def _format_items(items: list[dict], item_type: str, max_items: int = 15) -> str
         elif item_type == "clinical_trial":
             lines.append(f"  - {item.get('nct_id', '')} | {item.get('sponsor', '')} | {item.get('status', '')} | {item.get('phase', '')} | {item.get('title', '')[:120]}")
         elif item_type == "opportunity":
-            amount = f"${item['award_amount']:,.0f}" if item.get("award_amount") else item.get("notice_type", "")
+            amount = _fmt_amount(item.get("award_amount")) or item.get("notice_type", "")
             deadline = f" | Due: {item['response_deadline']}" if item.get("response_deadline") else ""
             lines.append(f"  - [{item.get('notice_type', '')}] {item.get('agency', '')} | {amount} | Posted: {item.get('posted_date', '')}{deadline} | {item.get('title', '')[:120]}")
     return "\n".join(lines)
