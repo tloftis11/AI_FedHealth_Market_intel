@@ -23,6 +23,7 @@ const LOOKBACK_OPTIONS = [
 
 const SOURCES = [
   { key: 'usa_spending', label: 'USASpending' },
+  { key: 'sam_gov', label: 'SAM.gov' },
   { key: 'fed_register', label: 'Fed Register' },
   { key: 'nih', label: 'NIH Reporter' },
   { key: 'news', label: 'News' },

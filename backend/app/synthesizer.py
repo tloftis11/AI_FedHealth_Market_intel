@@ -24,6 +24,10 @@ def _format_items(items: list[dict], item_type: str, max_items: int = 15) -> str
             lines.append(f"  - [{item.get('source', '')}] {item.get('date', '')} | {item.get('title', '')[:150]}")
         elif item_type == "clinical_trial":
             lines.append(f"  - {item.get('nct_id', '')} | {item.get('sponsor', '')} | {item.get('status', '')} | {item.get('phase', '')} | {item.get('title', '')[:120]}")
+        elif item_type == "opportunity":
+            amount = f"${item['award_amount']:,.0f}" if item.get("award_amount") else item.get("notice_type", "")
+            deadline = f" | Due: {item['response_deadline']}" if item.get("response_deadline") else ""
+            lines.append(f"  - [{item.get('notice_type', '')}] {item.get('agency', '')} | {amount} | Posted: {item.get('posted_date', '')}{deadline} | {item.get('title', '')[:120]}")
     return "\n".join(lines)
 
 
@@ -33,6 +37,7 @@ def _build_briefing_prompt(topic_label: str, all_data: list[dict], start_date: s
     regulations = _format_items(all_data, "regulation")
     news = _format_items(all_data, "news")
     trials = _format_items(all_data, "clinical_trial")
+    opportunities = _format_items(all_data, "opportunity")
 
     context_section = f"\nADDITIONAL ANALYST CONTEXT:\n{user_context}\n" if user_context.strip() else ""
 
@@ -46,8 +51,11 @@ AUDIENCE: Federal health practice leadership (managing directors, principals)
 ---
 RAW DATA COLLECTED:
 
-FEDERAL CONTRACTS AWARDED:
+FEDERAL CONTRACTS AWARDED (USASpending):
 {contracts}
+
+SAM.GOV OPPORTUNITIES (SOLICITATIONS & AWARD NOTICES):
+{opportunities}
 
 NIH/FEDERAL GRANTS:
 {grants}
@@ -132,6 +140,7 @@ def synthesize(topic_label: str, all_data: list[dict], start_date: str, end_date
 
 def build_chat_system_prompt(all_data: list[dict], topic_labels: list[str], start_date: str, end_date: str, user_context: str = "") -> str:
     contracts = _format_items(all_data, "contract", max_items=20)
+    opportunities = _format_items(all_data, "opportunity", max_items=20)
     grants = _format_items(all_data, "grant", max_items=20)
     regulations = _format_items(all_data, "regulation", max_items=20)
     news = _format_items(all_data, "news", max_items=30)
@@ -149,8 +158,11 @@ Agencies covered: HHS and all operating divisions (NIH, CMS, CDC, FDA, HRSA, SAM
 ---
 COLLECTED MARKET DATA:
 
-FEDERAL CONTRACTS:
+FEDERAL CONTRACTS (USASpending):
 {contracts}
+
+SAM.GOV OPPORTUNITIES (SOLICITATIONS & AWARD NOTICES):
+{opportunities}
 
 NIH/FEDERAL GRANTS:
 {grants}

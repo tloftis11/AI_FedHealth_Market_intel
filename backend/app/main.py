@@ -21,6 +21,7 @@ from app.config import (
 )
 from app.collectors import (
     fetch_contracts, fetch_regulations, fetch_grants, fetch_news, fetch_trials,
+    fetch_opportunities,
 )
 from app.synthesizer import synthesize, build_chat_system_prompt
 from app.html_formatter import format_briefing, wrap_briefing
@@ -92,6 +93,9 @@ async def _collect_for_topic_cfg(topic_cfg: dict, start_date: str, end_date: str
     if "clinical_trials" in sources:
         tasks.append(asyncio.to_thread(fetch_trials, topic_cfg["keywords"], start_date, end_date))
         labels.append("trials")
+    if "sam_gov" in sources:
+        tasks.append(asyncio.to_thread(fetch_opportunities, topic_cfg["keywords"], start_date, end_date, _AGENCIES))
+        labels.append("opportunities")
 
     results = await asyncio.gather(*tasks, return_exceptions=True)
     all_data = []

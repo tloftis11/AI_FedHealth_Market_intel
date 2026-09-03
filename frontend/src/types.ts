@@ -29,6 +29,6 @@ export const DEFAULT_FILTERS: Filters = {
   topics: ['human_plus'],
   custom_topics: [],
   lookback_days: 90,
-  sources: ['usa_spending', 'fed_register', 'nih', 'news', 'clinical_trials'],
+  sources: ['usa_spending', 'sam_gov', 'fed_register', 'nih', 'news', 'clinical_trials'],
   user_context: '',
 }

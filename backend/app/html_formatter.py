@@ -117,7 +117,7 @@ def wrap_briefing(topic_sections: list[str], topics_covered: list[str], start_da
   </div>
   {content}
   <div class="briefing-footer">
-    <strong>Sources:</strong> USASpending.gov &bull; Federal Register &bull; NIH Reporter &bull; Google News RSS &bull; ClinicalTrials.gov<br>
+    <strong>Sources:</strong> USASpending.gov &bull; SAM.gov &bull; Federal Register &bull; NIH Reporter &bull; Google News RSS &bull; ClinicalTrials.gov<br>
     <em>For internal distribution only &bull; Based on publicly available information</em>
   </div>
 </div>"""
